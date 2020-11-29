@@ -1,48 +1,38 @@
-import express from "express"
+import express, {Request, Response} from "express"
+import {DELETE_TASK, DELETE_TASK2, HELP, HELP_CONTENT, NEW_TASK, SIGNIN, TASKS} from "./consts/commands";
+import {INVALID_COMMAND} from "./consts/messages";
 
 const app = express()
+app.use(express.urlencoded({extended: false}));
 
-const client = require("twilio")("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN")
+const MessagingResponse = require('twilio').twiml.MessagingResponse;
 
-const phoneNumber = `556391047668`
+app.post('/receive-message', async (request: Request, response: Response) => {
+    const twiml = new MessagingResponse();
 
-const todos = [
-    {
-        id: 1,
-        title: 'ler',
-        job: 'ler harry potter'
-    },
-    {
-        id: 2,
-        title: 'estudar',
-        job: 'estudar node js'
-    },
-    {
-        id: 3,
-        title: 'assistir',
-        job: 'assistir enrolados'
-    },
-    {
-        id: 4,
-        title: 'assistir',
-        job: 'assistir valente'
+    const message = twiml.message();
+
+    const messageBody = request.body.Body
+    const messageSender = request.body.From
+
+    const phoneNumber = messageSender.substring(10)
+
+    if (messageBody.startsWith(TASKS)) {
+        message.body(`oi, ${messageSender}`);
+    } else if (messageBody.startsWith(SIGNIN)) {
+//
+    } else if (messageBody.startsWith(NEW_TASK)) {
+//
+    } else if (messageBody.startsWith(DELETE_TASK) || messageBody.startsWith(DELETE_TASK2)) {
+//
+    } else if (messageBody.startsWith(HELP)) {
+        message.body(`${HELP_CONTENT}`)
+    } else {
+        message.body(`${INVALID_COMMAND}`)
     }
-]
 
-let convertedTodo: string = ''
-
-todos.map(todo => {
-    convertedTodo += `${todo.id}. *${todo.title}*\n${todo.job}\n\n`
-})
-
-console.log(convertedTodo)
-
-app.get('/', () => {
-    client.messages.create({
-        from: 'whatsapp:+14155238886',
-        body: '*_tarefas:_*\n' + convertedTodo,
-        to: `whatsapp:+${phoneNumber}`
-    }).then((message: any) => console.log(message)).catch((error: any) => console.log(error))
+    response.writeHead(200, {'Content-Type': 'text/xml'});
+    response.end(twiml.toString());
 })
 
 app.listen(3333)
