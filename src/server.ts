@@ -9,11 +9,13 @@ import {
     NEW_TASK,
     SIGNIN,
     TASKS
-} from "./consts/commands";
-import {INVALID_COMMAND} from "./consts/messages";
+} from "./consts/commands"
+import {INVALID_COMMAND} from "./consts/messages"
 import {Db, MongoClient, ObjectID} from "mongodb"
 
-const uri = ""
+import 'dotenv/config'
+
+const uri = process.env.MONGODB_URI || ""
 
 interface Task {
     _id: string
@@ -68,10 +70,13 @@ app.post('/receive-message', async (request: Request, response: Response) => {
         const taskIndex = messageBody.toString().substring(10)
         const tasks: Task[] | undefined = await db?.collection("tasks").find({active: true}).toArray()
 
-        await db?.collection("tasks").updateOne({_id: new ObjectID(tasks[taskIndex - 1]._id)}, {$set: {active: false}})
-        await db?.collection("tasks").updateOne({_id: new ObjectID(tasks[taskIndex - 1]._id)}, {$set: {finishedAt: new Date()}})
-
-        message.body(`Tarefa *_${tasks[taskIndex - 1].task}_* marcada como concluída.`)
+        if (tasks) {
+            await db?.collection("tasks").updateOne({_id: new ObjectID(tasks[taskIndex - 1]._id)}, {$set: {active: false}})
+            await db?.collection("tasks").updateOne({_id: new ObjectID(tasks[taskIndex - 1]._id)}, {$set: {finishedAt: new Date()}})
+            message.body(`Tarefa *_${tasks[taskIndex - 1].task}_* marcada como concluída.`)
+        } else {
+            message.body(`A tarefa não foi encontrada.`)
+        }
 
     } else if (messageBody.substr(0, TASKS.length) === TASKS) {
         const tasks = await db?.collection("tasks").find({active: true}).toArray()
@@ -96,7 +101,7 @@ MongoClient.connect(uri, {useUnifiedTopology: true}, (err, client) => {
     if (err) console.log(err)
     db = client.db('todo-bot')
 
-    app.listen(3333)
+    app.listen(process.env.PORT || 3333)
 },)
 
 

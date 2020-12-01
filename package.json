@@ -4,13 +4,15 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "ts-node-dev --transpile-only --ignore-watch node_modules src/server.ts"
+    "start": "node dist/server.js",
+    "dev": "tsnd --transpile-only --ignore-watch node_modules src/server.ts",
+    "build": "tsc"
   },
   "dependencies": {
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "mongodb": "^3.6.3",
-    "twilio": "^3.52.0",
-    "typeorm": "^0.2.29"
+    "twilio": "^3.52.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.9",
